@@ -1,0 +1,28 @@
+{
+  "private": true,
+  "name": "scriptscript",
+  "version": "0.0.1",
+  "description": "Component Orchestration using javascript",
+  "main": "lib/main.js",
+  "scripts": {
+    "prepublish": "coffee --compile --output lib src",
+    "test": "mocha spec --recursive --require spec/helpers/chai.js --require coffee-script/register --compilers coffee:coffee-script/register",
+    "test-watch": "mocha --recursive -w spec --require spec/helpers/chai.js --require coffee-script/register --compilers coffee:coffee-script/register",
+    "test-jenkins": "JUNIT_REPORT_PATH=report.xml JUNIT_REPORT_STACK=1 mocha spec --recursive --require spec/helpers/chai.js --timeout 15000 --reporter mocha-jenkins-reporter --require coffee-script/register --compilers coffee:coffee-script/register||true",
+    "main": "coffee src/main.coffee"
+  },
+  "author": "Lukas Degener <l.degener@tarent.de>",
+  "license": "Not decided yet",
+  "devDependencies": {
+    "chai": "^2.2.0",
+    "chai-as-promised": "^4.3.0",
+    "coffee-script": "^1.9.0",
+    "mocha": "^2.2.1",
+    "mocha-jenkins-reporter": "^0.1.6"
+  },
+  "dependencies": {
+    "js-yaml": "^3.2.7",
+    "promise": "^6.0.1",
+    "request": "^2.51.0"
+  }
+}
