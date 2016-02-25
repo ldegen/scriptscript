@@ -8,12 +8,14 @@ var Promise = require("promise");
 chai.config.includeStack = true;
 chai.use(asPromised);
 
+global.sinon = require("sinon");
+chai.use(require('sinon-chai'));
+
+
 global.expect = chai.expect;
 global.AssertionError = chai.AssertionError;
 global.Assertion = chai.Assertion;
 global.assert = chai.assert;
-
-global.Factory = require("./factory");
 
 global.Source = function(chunks,opts0){
   var opts = opts0 || {
@@ -34,6 +36,7 @@ global.Sink = function(opts0) {
   var buf = opts.objectMode ? [] : new Buffer([]);
   var output = new Writable(opts);
   output._write = function(chunk, enc, next) {
+    console.log("sink got chunk",chunk);
     if (chunk) {
       if (opts.objectMode) {
         buf.push(chunk);

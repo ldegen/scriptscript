@@ -1,8 +1,10 @@
+shell = require("scriptscript");
+
 shell(function(cx) {
 
   var host,cluster,index; //TODO
 
-  var esUrl
+  var esUrl = "http://"+host+"/"+index
 
   var lookupCsv = cx.file(geprisHome,"snapshots","lookup.csv.gz");
   var primaryCsv = cx.file(geprisHome,"snapshots","projekte.csv.gz");
