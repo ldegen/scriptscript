@@ -36,7 +36,6 @@ global.Sink = function(opts0) {
   var buf = opts.objectMode ? [] : new Buffer([]);
   var output = new Writable(opts);
   output._write = function(chunk, enc, next) {
-    console.log("sink got chunk",chunk);
     if (chunk) {
       if (opts.objectMode) {
         buf.push(chunk);

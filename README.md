@@ -5,6 +5,21 @@ The Shell
 The `shell` executes `scripts`. Scripts are mode of `pipelines`.
 A pipeline is made of one or more `filters` connected by `pipes`.
 
+A `filter` is a function that accepts a tripple 
+
+  (in:Readable, out:Writeable, err:Writeable)
+
+as its arguments. It manipulates these streams in a way it sees fit
+and returns a Promise that is resolved once the filter is done with whatever
+it is doing to the streams.
+
+
+A `command` is a factory function that takes arbitrary paramters and returns
+a new filter.
+
+
+
+
 Filters read from one input stream and write to an output and an error stream.
 By default, these streams are connected to the corresponding streams of the pipeline,
 which in turn are connected to the corresponding streams of the script.

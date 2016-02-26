@@ -38,6 +38,7 @@ module.exports = (opts0 )->
         in: output
         out: cx0.streams.out
         err: cx0.streams.err
+        prevErr: error
       makeContext nextStreams, p
 
   for name,factory of opts.commands
@@ -47,13 +48,42 @@ module.exports = (opts0 )->
     cx = Object.create commands
     cx.streams=streams
     (cx.then = p.then.bind p) if p?
+    # add a method to attach filters to the error stream of the
+    # previous filter. But only do this, if there *is* a
+    # previous filter to begin with.
+    
+    if streams.prevErr?
+      cx.stderr = ()->
+        cxErr = Object.create commands
+        # previous output is current input.
+        # By default it is patched through to current output, 
+        # nothing to do about that.
+        # But we need to disconnect previous error from current error
+        # and instead also pipe it into current output.
+        streams.prevErr.unpipe streams.err
+        streams.prevErr.pipe streams.out
+        
+        # Now we can create a modified stream triple
+        # that uses the previous error as input.
+        cxErr.streams =
+          in:streams.prevErr
+          out:streams.out
+          err:streams.err
+        # Note that we do *not* add the stderr-command to this context.
+        # This would make no sense at all.
+
+        # The then-Function is identical to the one of the
+        # previous context: we did not create any filter!
+        cxErr.then = cx.then if cx.then?
+
+        cxErr
     cx
 
   tearDown = (outcome)->
-    console.log "teardown called"
+    #console.log "teardown called"
     outcome
   handleError = (e)->
-    console.log "errorHandler called"
+    #console.log "errorHandler called"
     console.error(e.stack)
     throw e
   

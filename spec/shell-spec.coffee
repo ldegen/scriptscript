@@ -1,7 +1,7 @@
 describe "The Shell", ->
   cmdStub = stdin = stdout = stderr = shell = undefined
   Shell = require "../src/shell"
-  
+  BaseFilter = require "./helpers/base-filter"
   beforeEach ->
     stdin=Source [
       "first chunk\n"
@@ -10,86 +10,78 @@ describe "The Shell", ->
     ], objectMode:false
     stdout = Sink objectMode:false
     stderr = Sink objectMode:false
-    cmdStub = sinon.stub()
     shell = Shell
       streams:
         in:stdin
         out:stdout
         err:stderr
       commands:
-        cmd: -> cmdStub
         write: (chunks)->
           (input,output,error)->
             new Promise (resolve, reject)->
               process.nextTick ->
-                console.log "write",chunks
                 (output.write chunk) for chunk in chunks
                 output.end()
                 error.end()
-                console.log("write end")
                 resolve()
         read: (buf,copy)->
           (input,output,error)->
-            console.log "read"
-            new Promise (resolve,reject)->
-              input.on "error", (e)-> 
-                error.end(e.stack)
-                output.end()
-                reject e
-              input.on "end", -> 
-                output.end()
-                error.end()
-                console.log("read end")
-                resolve()
-              input.on "data", (chunk)->
-                console.log "read data",chunk
-                output.write chunk if copy
-                buf.push(chunk.toString())
-              input.resume()
+            f=new BaseFilter input,output,error
+            f.data = (chunk)->
+              output.write chunk if copy
+              buf.push(chunk.toString())
+            f.register()
         upperCase: ->
           (input,output,error)->
-            console.log "upper case"
-            new Promise (resolve,reject)->
-              input.on "error", (e)-> 
-                error.end(e.stack)
-                output.end()
-                reject e
-              input.on "end", -> 
-                error.end()
-                output.end()
-                console.log("uppercase end")
-                resolve()
-              input.on "data", (chunk)->
-                console.log "uppercase data", chunk
-                output.write(chunk.toString().toUpperCase())
-              input.resume()
+            f=new BaseFilter input,output,error
+            f.data = (chunk)->
+              output.write(chunk.toString().toUpperCase())
+            f.register()
+        count:->
+            (input,output,error)->
+              counter = 0
+              f=new BaseFilter input,output,error
+              f.data = (chunk)->
+                counter += chunk.length
+                BaseFilter.prototype.data.call this,chunk
+              f.end = (chunk)->
+                counter += chunk.length if chunk?
+                error.write "Got #{counter} bytes"
+                BaseFilter.prototype.end.call this,chunk
+              f.register()
 
 
-  describe "general interace", ->
-    xit "provides access to registered commands", ->
-      cmdStub.returns(42)
-      p=shell (cx)->
-        cx.cmd()
-      expect(p).to.be.fulfilled.then (outcome)->
-        expect(cmdStub).calledWith(stdin,stdout,stderr)
-        expect(outcome).to.eql 42
 
-    xit "handles filters that return promises", ->
-      cmdStub.returns Promise.resolve 42
-      p=shell (cx)->
-        cx.cmd()
-      expect(p).to.be.fulfilled.then (outcome)->
-        expect(cmdStub).calledWith(stdin,stdout,stderr)
-        expect(outcome).to.eql 42
+  it "allows connecting the output of one filter with the input of another", ->
+    r=[]
+    p=shell (cx)->
+      cx
+        .write(["foo","bar","baz"])
+        .upperCase()
+        .read(r,true)
+    expect(p).to.be.fulfilled.then ->
+      expect(stdout.promise).to.eventually.eql("FOOBARBAZ")
+      expect(r).to.eql ["FOO","BAR","BAZ"]
+  it "connects the first filter of a pipeline to the script's input", ->
+    r=[]
+    p = shell (cx)->cx.read(r)
+    expect(p).to.be.fulfilled.then ->
+      expect(r).to.eql  [
+        "first chunk\n"
+        "second chunk"
+        "third chunk\n"
+      ]
 
-    it "it allows connecting the output of one filter with the input of another", ->
-      r=[]
-      p=shell (cx)->
-        cx
-          .write(["foo","bar","baz"])
-          .upperCase()
-          .read(r,true)
-      expect(p).to.be.fulfilled.then ->
-        console.log "r",r
-        expect(stdout.promise).to.eventually.eql("FOOBARBAZ")
-        expect(r).to.eql ["FOO","BAR","BAZ"]
+  it "allows connecting the error of one filter with the input of another", ->
+    r=[]
+    p = shell (cx)->
+      cx.count().stderr().read(r)
+    expect(p).to.be.fulfilled.then ->
+      expect(r).to.eql  [
+        "Got 36 bytes"
+      ]
+
+      expect(stdout.promise).to.eventually.eql """
+                                               first chunk
+                                               second chunkthird chunk
+                                               """
