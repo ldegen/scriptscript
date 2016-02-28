@@ -17,12 +17,12 @@ global.AssertionError = chai.AssertionError;
 global.Assertion = chai.Assertion;
 global.assert = chai.assert;
 
-global.Source = function(chunks,opts0){
+global.Source = function(chunks, opts0) {
   var opts = opts0 || {
     objectMode: true
   };
   var input = new Readable(opts);
-  chunks.forEach(function(chunk){
+  chunks.forEach(function(chunk) {
     input.push(chunk);
   });
   input.push(null);
@@ -46,7 +46,15 @@ global.Sink = function(opts0) {
     next();
   };
   output.promise = new Promise(function(resolve, reject) {
-    output.on("error", reject);
+    output.on("error", function(e) {
+      console.log("sink error",e.stack);
+      reject(e);
+    });
+    /*
+     *output.on("end", function() {
+     *  console.log("sink end");
+     *});
+     */
     output.on("finish", function() {
       resolve(opts.objectMode ? buf : buf.toString().trim());
     });

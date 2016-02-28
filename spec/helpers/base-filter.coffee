@@ -1,29 +1,40 @@
 module.exports = class BaseFilter
-  resolve=reject=promise=undefined
-  streams={}
-  constructor: (input,output,error)->
-    streams.input=input
-    streams.output=output
-    streams.error=error
-    promise = new Promise (resolve0, reject0)->
-      resolve = resolve0
-      reject = reject0
+  Promise = require "promise"
+  constructor: (input,output,error,@name)->
+    @resolve=@reject=@promise=undefined
+    @streams=
+      input:input
+      output:output
+      error:error
+    self=this
+    @promise = new Promise (resolve0, reject0)->
+      self.resolve = resolve0
+      self.reject = reject0
+      self.resolve.__name__=self.name
+
     
 
   error: (e)->
-    streams.error.end(e.stack)
-    streams.output.end()
-    reject e
+    @streams.error.end(e.stack)
+    @streams.output.end()
+    @reject e
   end: (chunk) -> 
-    streams.output.end(chunk)
-    streams.error.end()
-    resolve()
+    if chunk?
+      @data chunk
+    @streams.output.end()
+    @streams.error.end()
+    @resolve()
   data: (chunk)->
-    streams.output.write chunk
+    @streams.output.write chunk
   
   register: (events0)->
+    self=this
+    @streams.output.on "error", (e)->
+      self.reject e
+    @streams.error.on "error", (e)->
+      self.reject e
     events = events0 ? ["error","data","end"]
     for event in events
-      streams.input.on event, this[event].bind this 
-    streams.input.resume()
-    promise
+      @streams.input.on event, this[event].bind this 
+    @streams.input.resume()
+    @promise
