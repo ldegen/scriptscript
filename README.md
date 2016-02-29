@@ -46,8 +46,19 @@ shell(function(cx){
 ```
 
 The `shell`-Function is the facility that actually executes your scrip. Note
-the `cx`-Object it injects into your script. This is the facade through which
-you access all commands.
+the `cx`-Object it injects into your script. This is a `context`. 
+Context objects are the facade through which you access all *commands* and *language directives*.
+Commands are the atomic building blocks that do the actual work. *Language directives* provide the
+'glue' between commands. They are used for redirecting stderr or waiting for a pipeline to finish.
+All commands always return a context object themselfs. Most (but not all) language directives to the same. 
+This gives us a neat "fluent" syntax for creating pipelines or sequences of pipelines.
+There are three variants of contexts that differ slightly as to what language direcvtives they support:
+
+- All context objects support the directives `call()` and `allFinished()`.
+
+- Context objects returned by a command supports the additional directives `then()` and `stderr()`.
+
+- Context objects returned by stderr() support the additional directive `then()` *but not* `stderr()`.
 
 The `shell`-function returns a Promise object which you can use to "wait" for
 your script to finish. Thise Promise object won't be resolved until *all*
@@ -56,7 +67,7 @@ Once resolved, it will yield the outcome of the very last filter that was
 created *synchronously* in your script.
 
 ### Pipes and Filters
-
+![pipes and filters animation](pipesandfilters.gif "How Pipelines work")
 Whenever you call a command, you create a filter. In our case a filter is a function
 that manipulates an input, an output and an error stream and returns a promise that will be resolved
 once the filter is done with its work.
@@ -170,12 +181,45 @@ which will return a Promise object resolving to an array containing the outcomes
 pipeline.
 
 ### Named Pipes
+TODO
+
+We eventually need something like named pipes e.g. to merge streams into one.
+But there is no need for special language constructs. I think named pipes would best be implemented as built-in command.
+
+Language Directives
+-------------------
+
+### `then()`
+Context objects that are returned by commands or the `stderr()`-Directive are actually Promises.
+For details on the calling semantics please refer to the Promise/A+ spec.
+The Promise is resolved once the previous filter finishes. 
+It yields a new "initial" context, that can be used to start a new pipeline. It includes a 
+special property `outcome` which is the outome of the beforementioned filter.
+
+
+### `allFinished()`
+This is available in all context objects. It returns a Promise object that is resolved once all
+filters in the current pipeline have finished. It yields a new "initial" context, that can be used to start 
+a new pipeline. It includes a special property `outcome` which is an array containing the outcome of all
+filters in the current pipeline.
+
+### `stderr()`
+This is available in context objects directly returned from commands. It returns a new context with
+the input attached to the stderr of the previous filter. 
+
+### `call()`
+This is available in all context objects. It simply calls the first argument as a function and passes
+the current context. This way you can build things like subroutines, put them in a normal javascript function
+and chain them in your pipeline in a readable fashion.
+
+Built-in Commands
+-----------------
 
 TODO
 
-### Built-in Commands
 
-TODO
+Misc
+----
 
 ### Defining Custom Commands
 
