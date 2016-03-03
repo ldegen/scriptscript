@@ -34,3 +34,21 @@ describe "The '.read()'-Command", ->
   it "rejects the returned promise if the file does not exist", ->
     expect(runFilter read "/i/do/not/exist.txt").to.be.rejected.then (err)->
       expect(err).instanceOf Error
+  it "can output a nice progress bar on stderr", ->
+    p=runFilter read tmpfile,
+      highWaterMark:6
+      progressBar:
+        lineWidth: 25
+    expect(p).to.be.fulfilled.then ([outcome,out,err])->
+      expect(out.toString()).to.equal "The content of the file\n"
+      expect(err.toString().split('\r').join('\n')).to.equal(
+        """
+
+        [----------------]   0.0%
+        [####------------]  25.0%
+        [########--------]  50.0%
+        [############----]  75.0%
+        [################] 100.0%
+
+        """
+      )
