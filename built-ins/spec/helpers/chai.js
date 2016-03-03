@@ -28,6 +28,15 @@ global.Source = function(chunks, opts0) {
   input.push(null);
   return input;
 };
+global.tmpFileName = function(test) {
+  var sha1 = require("crypto").createHash("sha1");
+  sha1.update(new Buffer([process.pid]));
+  sha1.update(test.fullTitle());
+  return require("path").join(
+    require("os").tmpdir(), 
+    sha1.digest().toString("hex")
+  );
+};
 
 global.Sink = function(opts0) {
   var opts = opts0 || {
@@ -47,7 +56,7 @@ global.Sink = function(opts0) {
   };
   output.promise = new Promise(function(resolve, reject) {
     output.on("error", function(e) {
-      console.log("sink error",e.stack);
+      console.log("sink error", e.stack);
       reject(e);
     });
     /*
