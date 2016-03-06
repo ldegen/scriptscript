@@ -1,8 +1,8 @@
 {
   "private": true,
-  "name": "scriptscript",
+  "name": "scriptscript-shell",
   "version": "0.0.1",
-  "description": "Component Orchestration using javascript",
+  "description": "Shell for executing scriptscript scripts",
   "main": "lib/main.js",
   "scripts": {
     "prepublish": "coffee --compile --output lib src",
