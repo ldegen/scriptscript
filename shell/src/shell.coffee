@@ -1,6 +1,5 @@
 module.exports = (opts0 )->
   stream = (require "stream")
-  merge = (require "deepmerge")
   Promise = (require "promise")
 
   
