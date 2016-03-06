@@ -3,7 +3,7 @@
   "name": "scriptscript-builtins",
   "version": "0.0.1",
   "description": "Basic Commands for ScriptScript",
-  "main": "lib/main.js",
+  "main": "lib/builtins.js",
   "scripts": {
     "prepublish": "coffee --compile --output lib src",
     "test": "mocha spec --recursive --require spec/helpers/chai.js --require coffee-script/register --compilers coffee:coffee-script/register",
