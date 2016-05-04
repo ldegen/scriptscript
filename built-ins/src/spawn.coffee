@@ -33,10 +33,9 @@ module.exports = ->
         stderr.end()
         stdout.end()
         reject e
-      cp.on "exit", (outcome)->
-
-        if typeof outcome == "string"
-          reject new SignalReceivedError outcome.signal
+      cp.on "exit", (code,signal)->
+        if typeof signal == "string"
+          reject new SignalReceivedError signal
         else
-          resolve outcome
+          resolve code
     .then handleExitCode

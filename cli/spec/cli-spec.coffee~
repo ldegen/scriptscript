@@ -1,0 +1,5 @@
+describe "The command line interface",->
+  cli = require "../src/cli"
+
+  it "creates a shell and executes the script given as argument", ->
+    cli 

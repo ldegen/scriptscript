@@ -1,9 +1,12 @@
 {
   "private": true,
-  "name": "scriptscript-shell",
+  "name": "scriptscript-cli",
   "version": "0.0.1",
-  "description": "Shell for executing scriptscript scripts",
-  "main": "lib/shell.js",
+  "description": "scriptscript command line interface",
+  "main": "lib/cli.js",
+  "bin":{
+    "scriptscript": "./bin/scriptscript.js"
+  },
   "scripts": {
     "prepublish": "coffee --compile --output lib src",
     "test": "mocha spec --recursive --require spec/helpers/chai.js --require coffee-script/register --compilers coffee:coffee-script/register",
@@ -15,17 +18,21 @@
   "author": "Lukas Degener <l.degener@tarent.de>",
   "license": "Not decided yet",
   "devDependencies": {
-    "node-inspector": "^0.12.5",
     "chai": "^2.2.0",
     "chai-as-promised": "^4.3.0",
     "coffee-script": "^1.9.0",
     "mocha": "^2.2.1",
     "mocha-jenkins-reporter": "^0.1.6",
+    "node-inspector": "^0.12.5",
     "sinon": "^1.17.3",
-    "sinon-chai": "^2.8.0"
+    "sinon-chai": "^2.8.0",
+    "tmp": "0.0.28"
   },
   "dependencies": {
+    "scriptscript-builtins":"*",
+    "scriptscript-shell":"*",
     "js-yaml": "^3.2.7",
+    "minimist": "^1.2.0",
     "promise": "^6.0.1",
     "request": "^2.51.0"
   }

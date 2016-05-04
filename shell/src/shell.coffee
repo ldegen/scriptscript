@@ -2,6 +2,9 @@ module.exports = (opts0 )->
   stream = (require "stream")
   Promise = (require "promise")
 
+
+  wrapReadable = (r)->
+    
   
   # This is used to keep the shells output and error
   # from beeing ended before the *whole* script is done.
